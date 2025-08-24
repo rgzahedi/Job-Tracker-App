@@ -1,9 +1,11 @@
 import { Router } from 'express';
-import { getSupabaseClient } from '../lib/supabase.js';
+import { getSupabaseClient } from '../lib/supabase.js'
 import { z } from 'zod'
+import { requireAuth } from '../auth/requireAuth.js'
 
-const router = Router();
-const supabase = getSupabaseClient(); 
+const router = Router()
+const supabase = getSupabaseClient()
+// router.use(requireAuth)
 
 const jobSchema = z.object({
   company: z.string().min(1, "Company is required"),
@@ -13,90 +15,98 @@ const jobSchema = z.object({
 });
 
 router.get('/:id', async (req, res) => {
-  const { id } = req.params;
-
-  console.log(req.params)
+  const { id } = req.params
+  const { userId } = req
+  console.log(userId)
 
   const { data, error } = await supabase
     .from('jobs')
     .select('*')
     .eq('id', id)
+    .eq('user_id', userId)
     .single()
 
   if (error) {
     console.log("Reached this point! 500")
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message })
   }
 
   if (!data) {
     console.log("Reached the 404!")
-    return res.status(404).json({ error: 'Job not found' });
+    return res.status(404).json({ error: 'Job not found' })
   }
 
-  res.json(data);
-});
+  res.json(data)
+})
 
 
 router.get('/', async (req, res) => {
+  const { userId } = req
+
   const { data, error } = await supabase
     .from('jobs')
     .select('*')
-    .order('created_at', { ascending: false });
+    .eq("user_id", userId)
+    .order('created_at', { ascending: false })
 
-  if (error) return res.status(500).json({ error: error.message });
-  console.log('Jobs Data:', data);
-  res.json(data);
-});
-
+  if (error) return res.status(500).json({ error: error.message })
+  console.log('Jobs Data:', data)
+  res.json(data)
+})
 
 
 
 router.post('/', async (req, res) => {
+  const { userId } = req
   const parseResult = jobSchema.safeParse(req.body);
 
   if (!parseResult.success) {
-    return res.status(400).json({ error: parseResult.error.flatten().fieldErrors });
+    return res.status(400).json({ error: parseResult.error.flatten().fieldErrors })
   }
 
   const { company, title, status, date } = parseResult.data;
 
   const { data, error } = await supabase
     .from('jobs')
-    .insert([{ company, title, status, date }])
-    .select();
+    .insert([{ company, title, status, date, user_id: userId }])
+    .select()
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ error: error.message })
 
-  res.status(201).json(data[0]);
+  res.status(201).json(data[0])
 });
 
 
 router.put('/:id', async (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
+  const { id } = req.params
+  const updates = req.body
+  const { userId } = req
 
   const { data, error } = await supabase
     .from('jobs')
     .update(updates)
     .eq('id', id)
-    .select();
+    .eq("user_id", userId)
+    .select()
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data[0]);
+  if (error) return res.status(500).json({ error: error.message })
+  res.json(data[0])
 });
 
 
 
 router.delete('/:id', async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params
+  const { userId } = req
 
   const { error } = await supabase
     .from('jobs')
     .delete()
-    .eq('id', id);
+    .eq("user_id", userId)
+    .eq('id', id)
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.status(204).end();
+  if (error) return res.status(500).json({ error: error.message })
+  res.status(204).end()
 });
 
-export default router;
+export default router

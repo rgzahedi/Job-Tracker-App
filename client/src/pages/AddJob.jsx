@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
-import { createJob, updateJob, getJobById } from '../api'
+import { createJob, updateJob, getJobById } from '../api';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
 
 const AddJob = () => {
   const {
@@ -12,42 +13,46 @@ const AddJob = () => {
     reset
   } = useForm();
 
-  const { id } = useParams()
-
-  const navigate = useNavigate()
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { getToken, isSignedIn } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // useEffect(() => {
-  //   if (id) {
-  //     getJobById(id)
-  //       .then((data) => {
-  //         console.log('Job data from API:', data);
-  //         reset({
-  //           company: data.company,
-  //           title: data.title,
-  //           status: data.status,
-  //           date: data.date,
-  //         });
-  //       })
-  //       .catch((error) => {
-  //         console.error('Failed to load job:', error);
-  //       });
-  //   }
-  // }, [id, reset]);
+  useEffect(() => {
+  async function loadJob() {
+    if (!id || !isSignedIn) return;
+
+    try {
+      const token = await getToken();
+      const data = await getJobById(id, token);
+      reset({
+        company: data.company,
+        title: data.title,
+        status: data.status,
+        date: data.date,
+      });
+    } catch (error) {
+      console.error('Failed to load job:', error);
+    }
+  }
+  loadJob();
+}, [id, reset, getToken, isSignedIn]);
 
   const onSubmit = async (formData) => {
     try {
+      setLoading(true);
+      const token = await getToken();
       if (id) {
-        setLoading(true);
-        await updateJob(id, formData);
+        await updateJob(id, formData, token);
       } else {
-        await createJob(formData);
+        await createJob(formData, token);
       }
       navigate('/applications');
     } catch (error) {
       console.error('Failed to save job:', error);
+      setError('Failed to save job. Please try again.');
       setLoading(false);
     }
   };
@@ -60,10 +65,9 @@ const AddJob = () => {
     );
   }
 
-
   return (
     <div>
-      <h1 className='flex flex-col items-center justify-center gradient-title text-4xl font-extrabold sm:text-4xl lg:text-6xl'>
+      <h1 className="flex flex-col items-center justify-center gradient-title text-4xl font-extrabold sm:text-4xl lg:text-6xl">
         {id ? 'Edit Application' : 'Add an Application'}
       </h1>
 
@@ -71,10 +75,10 @@ const AddJob = () => {
         <div className="w-full max-w-md">
           <Input
             placeholder="Company"
-            {...register("company", { required: "Job title is required" })}
+            {...register("company", { required: "Company is required" })}
             className="w-full"
           />
-          {errors.company && <p className='text-red-500 text-sm'>{errors.company.message}</p>}
+          {errors.company && <p className="text-red-500 text-sm">{errors.company.message}</p>}
         </div>
 
         <div className="w-full max-w-md">
@@ -83,7 +87,7 @@ const AddJob = () => {
             {...register("title", { required: "Job title is required" })}
             className="w-full"
           />
-          {errors.title && <p className='text-red-500 text-sm'>{errors.title.message}</p>}
+          {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
         </div>
 
         <div className="w-full max-w-md">
@@ -97,23 +101,26 @@ const AddJob = () => {
             <option value="Offer">Offer</option>
             <option value="Rejected">Rejected</option>
           </select>
-          {errors.status && <p className='text-red-500 text-sm'>{errors.status.message}</p>}
+          {errors.status && <p className="text-red-500 text-sm">{errors.status.message}</p>}
         </div>
 
         <div className="w-full max-w-md">
           <Input
-            placeholder="Date Applied"
-            {...register("date", { required: "Job title is required" })}
+            placeholder="Date Applied (YYYY-MM-DD)"
+            {...register("date", { required: "Date is required" })}
             className="w-full"
           />
-          {errors.date && <p className='text-red-500 text-sm'>{errors.date.message}</p>}
+          {errors.date && <p className="text-red-500 text-sm">{errors.date.message}</p>}
         </div>
 
+        {error && <p className="text-red-500 text-center">{error}</p>}
+
         <button
-          type="save"
-          className="bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700"
+          type="submit"
+          className="bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700 transition"
+          disabled={loading}
         >
-          Save
+          {id ? 'Update Application' : 'Add Application'}
         </button>
       </form>
     </div>
