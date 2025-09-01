@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import './App.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
@@ -6,38 +5,45 @@ import LandingPage from './pages/LandingPage'
 import AddJob from './pages/AddJob'
 import { ThemeProvider } from './components/theme-provider'
 import Applications from './pages/Applications'
-import ProtectedRoute from './components/protected-route'
+import LoginPage from './pages/LoginPage'
+import SignPage from './pages/SignPage'
 
 const router = createBrowserRouter([
   {
-    element:<AppLayout />,
-    children:[
+    element: <AppLayout />,
+    children: [
       {
-        path:'/',
-        element:<LandingPage />
+        path: '/',
+        element: <LandingPage />
       },
       {
         path: '/add-job',
         element: (
-          <ProtectedRoute>
-            <AddJob />
-          </ProtectedRoute>
+          <AddJob />
         )
       },
       {
-        path:'/add-job/:id',
+        path: '/add-job/:id',
         element: (
-          <ProtectedRoute>
-            <AddJob/>
-          </ProtectedRoute>
+          <AddJob />
         )
       },
       {
-        path:'/applications',
+        path: '/applications',
         element: (
-          <ProtectedRoute>
-            <Applications/>
-          </ProtectedRoute>
+          <Applications />
+        )
+      },
+      {
+        path: '/login',
+        element: (
+          <LoginPage />
+        )
+      },
+      {
+        path: '/sign-up',
+        element: (
+          <SignPage />
         )
       }
     ]
@@ -45,7 +51,6 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>

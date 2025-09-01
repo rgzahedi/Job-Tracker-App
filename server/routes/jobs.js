@@ -38,9 +38,11 @@ router.get('/:id', async (req, res) => {
 
 
 router.get('/', async (req, res) => {
+  const userId = req.user.id
   const { data, error } = await supabase
     .from('jobs')
     .select('*')
+    .eq("user_id", userId)
     .order('created_at', { ascending: false });
 
   if (error) return res.status(500).json({ error: error.message });
@@ -53,6 +55,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const parseResult = jobSchema.safeParse(req.body);
+  const user_id = req.user.id
 
   if (!parseResult.success) {
     return res.status(400).json({ error: parseResult.error.flatten().fieldErrors });
@@ -62,7 +65,7 @@ router.post('/', async (req, res) => {
 
   const { data, error } = await supabase
     .from('jobs')
-    .insert([{ company, title, status, date }])
+    .insert([{ company, title, status, date, user_id }])
     .select();
 
   if (error) return res.status(500).json({ error: error.message });

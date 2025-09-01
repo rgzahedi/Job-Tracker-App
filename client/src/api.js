@@ -7,8 +7,14 @@ const api = axios.create({
   timeout: 5000,
 });
 
+const token = localStorage.getItem('token')
+
 export const getJobs = async () => {
-  const res = await api.get('/jobs');
+  const res = await api.get('/jobs', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   
   console.log('API Response:', res);
 
@@ -21,7 +27,11 @@ export const getJobs = async () => {
 
 export const createJob = async (jobData) => {
   try {
-    const res = await api.post('/jobs', jobData);
+    const res = await api.post('/jobs', jobData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     return res.data;
   } catch (err) {
     console.error('Failed to create job:', err.response?.data || err.message);
@@ -30,16 +40,28 @@ export const createJob = async (jobData) => {
 };
 
 export const getJobById = async (id) => {
-  const res = await api.get(`/jobs/${id}`);
+  const res = await api.get(`/jobs/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
   return res.data;
 };
 
 export const updateJob = async (id, updates) => {
-  const res = await api.put(`/jobs/${id}`, updates);
+  const res = await api.put(`/jobs/${id}`, updates, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
   return res.data;
 };
 
 export const deleteJob = async (id) => {
-  await api.delete(`/jobs/${id}`);
+  await api.delete(`/jobs/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
 };
 

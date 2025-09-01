@@ -15,7 +15,7 @@ const LandingPage = () => {
         </p>
       </section>
       <div className='flex justify-center'>
-        <Link to='/add-job'>
+        <Link to='/login'>
           <Button variant='blue' size='xl'>Add Application</Button>
         </Link>
       </div>
